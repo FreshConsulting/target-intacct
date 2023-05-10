@@ -66,7 +66,6 @@ def load_statistical_journal_entries(
         "PracticeAreaID",
         "BusinessUnit",
         "contact_name",
-        "whencreated",
     }
 
     if not REQUIRED_COLS.issubset(cols):
