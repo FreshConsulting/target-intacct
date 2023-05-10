@@ -92,6 +92,48 @@ def load_statistical_journal_entries(
     return journal_entries
 
 
+def build_entry(
+    row,
+    employee_ids,
+    class_ids,
+    location_ids,
+    department_ids,
+    object_name,
+    accountNo,
+):
+    if accountNo == 98051:
+        amount = row["Capacity"]
+    else:
+        amount = row["BudgetedBillable"]
+
+    employee_id = row["employeeid"]
+    class_id = row["BusinessUnit"]
+    location_id = row["locationid"]
+    department_id = row["PracticeAreaID"]
+
+    # Create journal entry line detail
+    je_detail = {
+        "AMOUNT": str(round(float(amount), 2)),
+        "TR_TYPE": 1,
+        "ACCOUNTNO": accountNo,
+    }
+
+    entry_error = False
+    for lst, field, to_search in [
+        (employee_ids, "EMPLOYEEID", employee_id),
+        (class_ids, "CLASSID", class_id),
+        (location_ids, "LOCATIONID", location_id),
+        (department_ids, "DEPARTMENTID", department_id),
+    ]:
+        entry_error = set_journal_entry_value(
+            je_detail, lst, field, to_search, object_name
+        )
+        if entry_error:
+            break
+
+    return je_detail, entry_error
+
+
 def build_lines(
     data, employee_ids, class_ids, location_ids, department_ids, object_name
 ):
@@ -100,39 +142,33 @@ def build_lines(
     journal_entries = []
     errored = False
 
-    # Create line items
+    # Create line items for Capacity
     for index, row in data.iterrows():
-        employee_id = row["employeeid"]
-        capacity = row["Capacity"]
-        class_id = row["BusinessUnit"]
-        location_id = row["locationid"]
-        department_id = row["PracticeAreaID"]
-
-        # Create journal entry line detail
-        je_detail = {
-            "AMOUNT": str(round(float(capacity), 2)),
-            "TR_TYPE": 1,
-            "ACCOUNTNO": 98051,
-        }
-
-        entry_error = False
-        for lst, field, to_search in [
-            (employee_ids, "EMPLOYEEID", employee_id),
-            (class_ids, "CLASSID", class_id),
-            (location_ids, "LOCATIONID", location_id),
-            (department_ids, "DEPARTMENTID", department_id),
-        ]:
-            entry_error = set_journal_entry_value(
-                je_detail, lst, field, to_search, object_name
-            )
-            if entry_error:
-                break
-
-        if entry_error:
-            errored = True
-
         # Create the line item
-        line_items.append(je_detail)
+        line_entry, errored = build_entry(
+            row,
+            employee_ids,
+            class_ids,
+            location_ids,
+            department_ids,
+            object_name,
+            98051,
+        )
+        line_items.append(line_entry)
+
+    # Create line items for Client Hours Expectation
+    for index, row in data.iterrows():
+        # Create the line item
+        line_entry, errored = build_entry(
+            row,
+            employee_ids,
+            class_ids,
+            location_ids,
+            department_ids,
+            object_name,
+            98050,
+        )
+        line_items.append(line_entry)
 
     # Create the entry
     entry = {
