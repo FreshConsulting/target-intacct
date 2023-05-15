@@ -141,34 +141,19 @@ def build_lines(
     journal_entries = []
     errored = False
 
-    # Create line items for Capacity
-    for index, row in data.iterrows():
-        # Create the line item
-        line_entry, errored = build_entry(
-            row,
+    # Create line items
+    line_item_types = ["Capacity", "BudgetedBillable"]
+
+    for line_item_type in line_item_types:
+        for index, row in data.iterrows():
+            line_entry, errored = build_entry(row,
             employee_ids,
             class_ids,
             location_ids,
             department_ids,
-            object_name,
-            "Capacity",
-        )
-        line_items.append(line_entry)
-
-    # Create line items for Client Hours Expectation
-    for index, row in data.iterrows():
-        # Create the line item
-        line_entry, errored = build_entry(
-            row,
-            employee_ids,
-            class_ids,
-            location_ids,
-            department_ids,
-            object_name,
-            "BudgetedBillable",
-        )
-        line_items.append(line_entry)
-
+            object_name,line_item_type)
+            line_items.append(line_entry)
+            
     # Create the entry
     entry = {
         "JOURNAL": row.get("Journal", "STJ"),
