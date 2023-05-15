@@ -1,7 +1,5 @@
 from datetime import datetime
 import json
-import sys
-
 import pandas as pd
 
 import singer
@@ -62,6 +60,8 @@ def load_statistical_journal_entries(
         "employeeid",
         "Capacity",
         "BudgetedBillable",
+        "CapacityNo",
+        "BudgetedBillableNo",
         "locationid",
         "PracticeAreaID",
         "BusinessUnit",
@@ -99,12 +99,11 @@ def build_entry(
     location_ids,
     department_ids,
     object_name,
-    accountNo,
+    account,
 ):
-    if accountNo == 98051:
-        amount = row["Capacity"]
-    else:
-        amount = row["BudgetedBillable"]
+    
+    accountNo = row[account + "No"]
+    amount = row[account]
 
     employee_id = row["employeeid"]
     class_id = row["BusinessUnit"]
@@ -152,7 +151,7 @@ def build_lines(
             location_ids,
             department_ids,
             object_name,
-            98051,
+            "Capacity",
         )
         line_items.append(line_entry)
 
@@ -166,7 +165,7 @@ def build_lines(
             location_ids,
             department_ids,
             object_name,
-            98050,
+            "BudgetedBillable",
         )
         line_items.append(line_entry)
 
