@@ -151,7 +151,9 @@ def build_lines(
             class_ids,
             location_ids,
             department_ids,
-            object_name,line_item_type)
+            object_name,
+            line_item_type)
+            
             line_items.append(line_entry)
             
     # Create the entry
