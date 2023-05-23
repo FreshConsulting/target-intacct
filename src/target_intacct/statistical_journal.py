@@ -58,10 +58,8 @@ def load_statistical_journal_entries(
     cols = list(data_frame.columns)
     REQUIRED_COLS = {
         "employeeid",
-        "Capacity",
-        "BudgetedBillable",
-        "CapacityNo",
-        "BudgetedBillableNo",
+        "Amount",
+        "AccountNo",
         "locationid",
         "PracticeAreaID",
         "BusinessUnit",
@@ -70,7 +68,7 @@ def load_statistical_journal_entries(
 
     if not REQUIRED_COLS.issubset(cols):
         raise Exception(
-            f"Input is missing REQUIRED_COLS. Found={json.dumps(cols)}, Required={json.dumps(REQUIRED_COLS)}"
+            f"Input is missing REQUIRED_COLS. Found={cols}, Required={REQUIRED_COLS}"
         )
 
     # Build the entries
@@ -99,12 +97,12 @@ def build_entry(
     location_ids,
     department_ids,
     object_name,
-    account,
+    account_number_column,
 ):
+    # Get cooresponding amount for current account
+    amount = row["Amount" + account_number_column.replace("AccountNo", "")]
+    accountNo = row[account_number_column]
     
-    accountNo = row[account + "No"]
-    amount = row[account]
-
     employee_id = row["employeeid"]
     class_id = row["BusinessUnit"]
     location_id = row["locationid"]
@@ -141,10 +139,10 @@ def build_lines(
     journal_entries = []
     errored = False
 
-    # Create line items
-    line_item_types = ["Capacity", "BudgetedBillable"]
+    # Create list of account data the journal will contain
+    account_number_columns = [column for column in data.columns if column.startswith("AccountNo")]
 
-    for line_item_type in line_item_types:
+    for account_number_column in account_number_columns:
         for index, row in data.iterrows():
             line_entry, errored = build_entry(row,
             employee_ids,
@@ -152,7 +150,7 @@ def build_lines(
             location_ids,
             department_ids,
             object_name,
-            line_item_type)
+            account_number_column)
             
             line_items.append(line_entry)
             
