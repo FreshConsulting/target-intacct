@@ -9,7 +9,7 @@ from .utils import get_input, set_journal_entry_value
 logger = singer.get_logger()
 
 
-def statistical_journal_upload(intacct_client, object_name) -> None:
+def statistical_journal_upload(intacct_client, object_name, batch_title) -> None:
     """Uploads Statistical Journals to Intacct.
 
     Retrieves objects from Intacct API for verifying input data
@@ -36,7 +36,7 @@ def statistical_journal_upload(intacct_client, object_name) -> None:
 
     # Journal Entries to be uploaded
     journal_entries = load_statistical_journal_entries(
-        employee_ids, class_ids, location_ids, department_ids, statistical_account_numbers, object_name
+        employee_ids, class_ids, location_ids, department_ids, statistical_account_numbers, object_name, batch_title
     )
 
     # Post the journal entries to Intacct
@@ -47,7 +47,7 @@ def statistical_journal_upload(intacct_client, object_name) -> None:
 
 
 def load_statistical_journal_entries(
-    employee_ids, class_ids, location_ids, department_ids, statistical_account_numbers, object_name
+    employee_ids, class_ids, location_ids, department_ids, statistical_account_numbers, object_name, batch_title
 ):
     """Loads inputted data into Statistical Journal Entries."""
 
@@ -60,11 +60,7 @@ def load_statistical_journal_entries(
     # Verify it has required columns
     cols = list(data_frame.columns)
     REQUIRED_COLS = {
-        "employeeid",
-        "locationid",
-        "PracticeAreaID",
-        "BusinessUnit",
-        "contact_name",
+        "tr_type"
     }
 
     if not REQUIRED_COLS.issubset(cols):
@@ -81,6 +77,7 @@ def load_statistical_journal_entries(
         department_ids,
         statistical_account_numbers,
         object_name,
+        batch_title,
     )
 
     # Print journal entries
@@ -100,32 +97,44 @@ def build_entry(
     account_number_column,
 ):
     account_no = row[account_number_column]        
+    tr_type = row["tr_type"]
+
 
     # Get corresponding amount for current account
     try: 
-        amount = row[account_number_column.replace("AccountNo", "Amount")]
+        amount = row[account_number_column.replace("accountno", "amount")]
     except KeyError:
-        raise Exception(f"Statistical Account Number {account_no} is missing a corresponding Amount")
+        raise Exception(f"Statistical Account Number {account_no} is missing a corresponding amount")
 
-    employee_id = row["employeeid"]
-    class_id = row["BusinessUnit"]
-    location_id = row["locationid"]
-    department_id = row["PracticeAreaID"]
+    # Column values to be added to the entry
+    journal_entry_values = [
+        (statistical_account_numbers, "ACCOUNTNO", account_no)
+    ]
 
+    if "employeeid" in row.index:
+        employee_id = row["employeeid"]
+        journal_entry_values.append((employee_ids, "EMPLOYEEID", employee_id))
+    
+    if "classid" in row.index:
+        class_id = row["classid"]
+        journal_entry_values.append((class_ids, "CLASSID", class_id))        
+    
+    if "locationid" in row.index:
+        location_id = row["locationid"]
+        journal_entry_values.append((location_ids, "LOCATIONID", location_id))
+
+    if "departmentid" in row.index:
+        department_id = row["departmentid"]
+        journal_entry_values.append((department_ids, "DEPARTMENTID", department_id))
+    
     # Create journal entry line detail
     je_detail = {
-        "AMOUNT": str(round(float(amount), 2)),
-        "TR_TYPE": 1,
+        "AMOUNT": str(amount),
+        "TR_TYPE": tr_type,
         "ACCOUNTNO": account_no,
     }
 
-    for lst, field, to_search in [
-        (employee_ids, "EMPLOYEEID", employee_id),
-        (class_ids, "CLASSID", class_id),
-        (location_ids, "LOCATIONID", location_id),
-        (department_ids, "DEPARTMENTID", department_id),
-        (statistical_account_numbers, "ACCOUNTNO", account_no)
-    ]:
+    for lst, field, to_search in journal_entry_values:
         set_journal_entry_value(
             je_detail, lst, field, to_search, object_name
         )
@@ -134,14 +143,14 @@ def build_entry(
 
 
 def build_lines(
-    data, employee_ids, class_ids, location_ids, department_ids, statistical_account_numbers, object_name
+    data, employee_ids, class_ids, location_ids, department_ids, statistical_account_numbers, object_name, batch_title
 ):
     logger.info(f"Converting {object_name}...")
     line_items = []
     journal_entries = []
 
     # Create list of account data the journal will contain
-    account_number_columns = [column for column in data.columns if column.startswith("AccountNo")]
+    account_number_columns = [column for column in data.columns if column.startswith("accountno")]
 
     if len(account_number_columns):
         for account_number_column in account_number_columns:
@@ -161,12 +170,12 @@ def build_lines(
         entry = {
             "JOURNAL": row.get("Journal", "STJ"),
             "BATCH_DATE": datetime.now().strftime("%m/%d/%Y"),
-            "BATCH_TITLE": "HOURS_PER_WEEK_DENOMINATOR",
+            "BATCH_TITLE": batch_title,
             "ENTRIES": {"GLENTRY": line_items},
          }
 
         journal_entries.append(entry)
     else:
-        raise Exception("Missing Required AccountNo Column. At least one Account number is required to upload a journal") 
+        raise Exception("Missing Required accountno Column. At least one Account number is required to upload a journal") 
 
     return journal_entries

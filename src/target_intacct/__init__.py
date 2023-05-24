@@ -31,10 +31,16 @@ def main() -> None:
 
     object_name = config["object_name"]
 
+    # If there is no Batch Title specified for journal entries, use the object_name as the batch_title
+    try:
+        batch_title = config["batch_title"]
+    except KeyError:
+        batch_title = object_name
+
     if object_name == "payroll_journal":
-        journal_upload(intacct_client, object_name)
+        journal_upload(intacct_client, object_name, batch_title)
     elif object_name == "statistical_journal":
-        statistical_journal_upload(intacct_client, object_name)
+        statistical_journal_upload(intacct_client, object_name, batch_title)
     else:
         raise Exception("Valid Object Name Not Found")
 
