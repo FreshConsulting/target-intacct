@@ -47,11 +47,19 @@ def set_journal_entry_value(
     ):
         je_field_name = (
             field_name
-            if field_name in ["EMPLOYEEID", "CLASSID"]
+            if field_name
+            in [
+                "EMPLOYEEID",
+                "CLASSID",
+                "CUSTOMERID",
+                "PROJECTID",
+                "ITEMID",
+                "VENDORID",
+            ]
             else field_name.replace("ID", "")
         )
         je_detail[je_field_name] = search_value
     else:
-        raise Exception(f"Field {field_name} with the value {search_value} is missing in Intacct for {object_name}")
-    
-    
+        raise Exception(
+            f"Field {field_name} with the value {search_value} is missing in Intacct for {object_name}"
+        )
