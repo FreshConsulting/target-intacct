@@ -22,6 +22,7 @@ INTACCT_OBJECTS = {
     "locations": "LOCATION",
     "departments": "DEPARTMENT",
     "employees": "EMPLOYEE",
+    "statistical_accounts": "STATACCOUNT",
 }
 
 DEFAULT_API_URL = "https://api.intacct.com/ia/xml/xmlgw.phtml"

@@ -30,10 +30,13 @@ def statistical_journal_upload(intacct_client, object_name) -> None:
     department_ids = intacct_client.get_entity(
         object_type="departments", fields=["DEPARTMENTID"]
     )
+    statistical_account_numbers = intacct_client.get_entity(
+        object_type="statistical_accounts", fields=["ACCOUNTNO"]
+    )
 
     # Journal Entries to be uploaded
     journal_entries = load_statistical_journal_entries(
-        employee_ids, class_ids, location_ids, department_ids, object_name
+        employee_ids, class_ids, location_ids, department_ids, statistical_account_numbers, object_name
     )
 
     # Post the journal entries to Intacct
@@ -44,7 +47,7 @@ def statistical_journal_upload(intacct_client, object_name) -> None:
 
 
 def load_statistical_journal_entries(
-    employee_ids, class_ids, location_ids, department_ids, object_name
+    employee_ids, class_ids, location_ids, department_ids, statistical_account_numbers, object_name
 ):
     """Loads inputted data into Statistical Journal Entries."""
 
@@ -58,8 +61,6 @@ def load_statistical_journal_entries(
     cols = list(data_frame.columns)
     REQUIRED_COLS = {
         "employeeid",
-        "Amount",
-        "AccountNo",
         "locationid",
         "PracticeAreaID",
         "BusinessUnit",
@@ -72,17 +73,15 @@ def load_statistical_journal_entries(
         )
 
     # Build the entries
-    journal_entries, errored = build_lines(
+    journal_entries = build_lines(
         data_frame,
         employee_ids,
         class_ids,
         location_ids,
         department_ids,
+        statistical_account_numbers,
         object_name,
     )
-    # If an error occurred when loading entries
-    if errored:
-        raise Exception("Building Statistical Journal Entries failed!")
 
     # Print journal entries
     logger.info(f"Loaded {len(journal_entries)} journal entries to post")
@@ -96,13 +95,18 @@ def build_entry(
     class_ids,
     location_ids,
     department_ids,
+    statistical_account_numbers,
     object_name,
     account_number_column,
 ):
-    # Get cooresponding amount for current account
-    amount = row["Amount" + account_number_column.replace("AccountNo", "")]
-    accountNo = row[account_number_column]
-    
+    account_no = row[account_number_column]        
+
+    # Get corresponding amount for current account
+    try: 
+        amount = row[account_number_column.replace("AccountNo", "Amount")]
+    except KeyError:
+        raise Exception(f"Statistical Account Number {account_no} is missing a corresponding Amount")
+
     employee_id = row["employeeid"]
     class_id = row["BusinessUnit"]
     location_id = row["locationid"]
@@ -112,56 +116,57 @@ def build_entry(
     je_detail = {
         "AMOUNT": str(round(float(amount), 2)),
         "TR_TYPE": 1,
-        "ACCOUNTNO": accountNo,
+        "ACCOUNTNO": account_no,
     }
 
-    entry_error = False
     for lst, field, to_search in [
         (employee_ids, "EMPLOYEEID", employee_id),
         (class_ids, "CLASSID", class_id),
         (location_ids, "LOCATIONID", location_id),
         (department_ids, "DEPARTMENTID", department_id),
+        (statistical_account_numbers, "ACCOUNTNO", account_no)
     ]:
-        entry_error = set_journal_entry_value(
+        set_journal_entry_value(
             je_detail, lst, field, to_search, object_name
         )
-        if entry_error:
-            break
 
-    return je_detail, entry_error
+    return je_detail
 
 
 def build_lines(
-    data, employee_ids, class_ids, location_ids, department_ids, object_name
+    data, employee_ids, class_ids, location_ids, department_ids, statistical_account_numbers, object_name
 ):
     logger.info(f"Converting {object_name}...")
     line_items = []
     journal_entries = []
-    errored = False
 
     # Create list of account data the journal will contain
     account_number_columns = [column for column in data.columns if column.startswith("AccountNo")]
 
-    for account_number_column in account_number_columns:
-        for index, row in data.iterrows():
-            line_entry, errored = build_entry(row,
-            employee_ids,
-            class_ids,
-            location_ids,
-            department_ids,
-            object_name,
-            account_number_column)
-            
-            line_items.append(line_entry)
-            
-    # Create the entry
-    entry = {
-        "JOURNAL": row.get("Journal", "STJ"),
-        "BATCH_DATE": datetime.now().strftime("%m/%d/%Y"),
-        "BATCH_TITLE": "HOURS_PER_WEEK_DENOMINATOR",
-        "ENTRIES": {"GLENTRY": line_items},
-    }
+    if len(account_number_columns):
+        for account_number_column in account_number_columns:
+            for index, row in data.iterrows():
+                line_entry = build_entry(row,
+                employee_ids,
+                class_ids,
+                location_ids,
+                department_ids,
+                statistical_account_numbers,
+                object_name,
+                account_number_column)
 
-    journal_entries.append(entry)
+                line_items.append(line_entry)
+        
+        # Create the entry
+        entry = {
+            "JOURNAL": row.get("Journal", "STJ"),
+            "BATCH_DATE": datetime.now().strftime("%m/%d/%Y"),
+            "BATCH_TITLE": "HOURS_PER_WEEK_DENOMINATOR",
+            "ENTRIES": {"GLENTRY": line_items},
+         }
 
-    return journal_entries, errored
+        journal_entries.append(entry)
+    else:
+        raise Exception("Missing Required AccountNo Column. At least one Account number is required to upload a journal") 
+
+    return journal_entries
