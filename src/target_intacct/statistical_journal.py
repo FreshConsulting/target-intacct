@@ -42,16 +42,20 @@ def statistical_journal_upload(intacct_client, object_name, batch_title) -> None
         object_type="statistical_accounts", fields=["ACCOUNTNO"]
     )
 
+    dimension_values = {
+        "employeeid": employee_ids,
+        "classid": class_ids,
+        "locationid": location_ids,
+        "departmentid": department_ids,
+        "customerid": customer_ids,
+        "projectid": project_ids,
+        "itemid": item_ids,
+        "vendorid": vendor_ids,
+    }
+
     # Journal Entries to be uploaded
     journal_entries = load_statistical_journal_entries(
-        employee_ids,
-        class_ids,
-        location_ids,
-        department_ids,
-        customer_ids,
-        project_ids,
-        item_ids,
-        vendor_ids,
+        dimension_values,
         statistical_account_numbers,
         object_name,
         batch_title,
@@ -65,14 +69,7 @@ def statistical_journal_upload(intacct_client, object_name, batch_title) -> None
 
 
 def load_statistical_journal_entries(
-    employee_ids,
-    class_ids,
-    location_ids,
-    department_ids,
-    customer_ids,
-    project_ids,
-    item_ids,
-    vendor_ids,
+    dimension_values,
     statistical_account_numbers,
     object_name,
     batch_title,
@@ -97,14 +94,7 @@ def load_statistical_journal_entries(
     # Build the entries
     journal_entries = build_lines(
         data_frame,
-        employee_ids,
-        class_ids,
-        location_ids,
-        department_ids,
-        customer_ids,
-        project_ids,
-        item_ids,
-        vendor_ids,
+        dimension_values,
         statistical_account_numbers,
         object_name,
         batch_title,
@@ -118,14 +108,7 @@ def load_statistical_journal_entries(
 
 def build_entry(
     row,
-    employee_ids,
-    class_ids,
-    location_ids,
-    department_ids,
-    customer_ids,
-    project_ids,
-    item_ids,
-    vendor_ids,
+    dimension_values,
     statistical_account_numbers,
     object_name,
     account_number_column,
@@ -150,17 +133,8 @@ def build_entry(
     set_journal_entry_value(
         je_detail, statistical_account_numbers, "ACCOUNTNO", account_no, object_name
     )
-    field_values = {
-        "employeeid": employee_ids,
-        "classid": class_ids,
-        "locationid": location_ids,
-        "departmentid": department_ids,
-        "customerid": customer_ids,
-        "projectid": project_ids,
-        "itemid": item_ids,
-        "vendorid": vendor_ids,
-    }
-    for field_name, ids_list in field_values.items():
+    
+    for field_name, ids_list in dimension_values.items():
         if field_name in row.index:
             field = row[field_name]
             set_journal_entry_value(
@@ -172,14 +146,7 @@ def build_entry(
 
 def build_lines(
     data,
-    employee_ids,
-    class_ids,
-    location_ids,
-    department_ids,
-    customer_ids,
-    project_ids,
-    item_ids,
-    vendor_ids,
+    dimension_values,
     statistical_account_numbers,
     object_name,
     batch_title,
@@ -198,14 +165,7 @@ def build_lines(
             for index, row in data.iterrows():
                 line_entry = build_entry(
                     row,
-                    employee_ids,
-                    class_ids,
-                    location_ids,
-                    department_ids,
-                    customer_ids,
-                    project_ids,
-                    item_ids,
-                    vendor_ids,
+                    dimension_values,
                     statistical_account_numbers,
                     object_name,
                     account_number_column,
