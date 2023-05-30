@@ -11,17 +11,19 @@ REQUIRED_CONFIG_KEYS = [
 # List of available objects with their internal object-reference/endpoint name.
 INTACCT_OBJECTS = {
     "accounts_payable_bills": "APBILL",
-    "accounts_payable_vendors": "VENDOR",
     "general_ledger_accounts": "GLACCOUNT",
     "general_ledger_details": "GLDETAIL",
     "general_ledger_journal_entries": "GLBATCH",
     "general_ledger_journal_entry_lines": "GLENTRY",
-    "projects": "PROJECT",
-    "customers": "CUSTOMER",
+    "employees": "EMPLOYEE",
     "classes": "CLASS",
     "locations": "LOCATION",
     "departments": "DEPARTMENT",
-    "employees": "EMPLOYEE",
+    "customers": "CUSTOMER",
+    "projects": "PROJECT",
+    "items": "ITEM",
+    "vendors": "VENDOR",
+    "statistical_accounts": "STATACCOUNT",
 }
 
 DEFAULT_API_URL = "https://api.intacct.com/ia/xml/xmlgw.phtml"

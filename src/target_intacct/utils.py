@@ -42,17 +42,24 @@ def set_journal_entry_value(
     object_name: str,
 ) -> bool:
     """Creates journal entries for statistical and financial journals."""
-    errored = False
     if search_value and any(
         filter(lambda o: o.get(field_name) == str(search_value), intacct_values)
     ):
         je_field_name = (
             field_name
-            if field_name in ["EMPLOYEEID", "CLASSID"]
+            if field_name
+            in [
+                "EMPLOYEEID",
+                "CLASSID",
+                "CUSTOMERID",
+                "PROJECTID",
+                "ITEMID",
+                "VENDORID",
+            ]
             else field_name.replace("ID", "")
         )
         je_detail[je_field_name] = search_value
     else:
-        errored = True
-        logger.error(f"Field {field_name} is missing in Intacct {object_name}")
-    return errored
+        raise Exception(
+            f"Field {field_name} with the value {search_value} is missing in Intacct for {object_name}"
+        )

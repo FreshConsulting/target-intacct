@@ -121,7 +121,7 @@ def build_lines(
         department_id = row["PracticeAreaID"]
         currency = row["Currency"]
         description = row["Description"]
-        amount = row["Amount"]
+        amount = row["amount"]
         tr_type = row["TR_TYPE"]
         exchange_rate = row["ExchangeRate"]
 
