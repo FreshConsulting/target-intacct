@@ -1,5 +1,4 @@
 from datetime import datetime
-import json
 import pandas as pd
 
 import singer
@@ -126,7 +125,7 @@ def build_entry(
 
     # Create journal entry line detail
     je_detail = {
-        "AMOUNT": str(amount),
+        "AMOUNT": str(round(amount, 2)),
         "TR_TYPE": tr_type,
     }
 
