@@ -4,6 +4,7 @@ from .client import get_client
 from .const import DEFAULT_API_URL, REQUIRED_CONFIG_KEYS
 from .statistical_journal import statistical_journal_upload
 from .payroll_journal import journal_upload
+from .employee_rate import employee_rate_upload
 
 logger = singer.get_logger()
 
@@ -41,6 +42,8 @@ def main() -> None:
         journal_upload(intacct_client, object_name, batch_title)
     elif object_name == "statistical_journal":
         statistical_journal_upload(intacct_client, object_name, batch_title)
+    elif object_name == "employee_rate":
+        employee_rate_upload(intacct_client)
     else:
         raise Exception("Valid Object Name Not Found")
 

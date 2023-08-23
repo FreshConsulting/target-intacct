@@ -25,7 +25,6 @@ from target_intacct.exceptions import (
 
 from .const import INTACCT_OBJECTS
 
-
 class SageIntacctSDK:
     """The base class for all API classes."""
 
@@ -125,6 +124,7 @@ class SageIntacctSDK:
         api_headers = {"content-type": "application/xml"}
         api_headers.update(self.__headers)
         body = xmltodict.unparse(dict_body)
+
         response = requests.post(api_url, headers=api_headers, data=body)
 
         parsed_xml = xmltodict.parse(response.text)
@@ -220,7 +220,7 @@ class SageIntacctSDK:
 
         return errormessages
 
-    def format_and_send_request(self, data: Dict) -> Union[List, Dict]:
+    def format_and_send_request(self, data: Dict, use_key:bool) -> Union[List, Dict]:
         """Format data accordingly to convert them to xml.
 
         Parameters:
@@ -229,10 +229,17 @@ class SageIntacctSDK:
         Returns:
             A response from the _post_request (dict).
         """
-
         key = next(iter(data))
-        object_type = data[key]["object"]
 
+        if use_key:
+            object_type = data[key]["object"]
+            function_type = key 
+            function_body = data[key]
+        else:
+            object_type = data["object"]
+            function_type = data["object"]
+            function_body = data[data["object"]]
+ 
         # Remove object entry if unnecessary
         if key == "create":
             data[key].pop("object", None)
@@ -252,7 +259,7 @@ class SageIntacctSDK:
                 "operation": {
                     "authentication": {"sessionid": self.__session_id},
                     "content": {
-                        "function": {"@controlid": str(uuid.uuid4()), key: data[key]}
+                        "function": {"@controlid": str(uuid.uuid4()), function_type: function_body}
                     },
                 },
             }
@@ -278,7 +285,7 @@ class SageIntacctSDK:
             }
         }
 
-        response = self.format_and_send_request(get_count)
+        response = self.format_and_send_request(get_count, True)
         count = int(response["data"]["@totalcount"])
         pagesize = 1000
         offset = 0
@@ -292,7 +299,7 @@ class SageIntacctSDK:
                     "offset": offset,
                 }
             }
-            intacct_objects = self.format_and_send_request(data)["data"][
+            intacct_objects = self.format_and_send_request(data, True)["data"][
                 intacct_object_type
             ]
             # When only 1 object is found, Intacct returns a dict, otherwise it returns a list of dicts.
@@ -344,13 +351,20 @@ class SageIntacctSDK:
         """Post journal to Intacct"""
         data = {"create": {"object": "GLBATCH", "GLBATCH": journal}}
 
-        response = self.format_and_send_request(data)
+        response = self.format_and_send_request(data, True)
         return response
 
+    def post_employee_rate(self, journal):
+        """Post journal to Intacct"""
+        data = {"object": "create_employeerate", "create_employeerate": journal}
+
+        response = self.format_and_send_request(data, False)
+        return response
+    
     def delete_journal(self, recordno):
         data = {"delete": {"object": "GLBATCH", "keys": recordno}}
 
-        response = self.format_and_send_request(data)
+        response = self.format_and_send_request(data, True)
         return response
 
 
