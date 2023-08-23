@@ -1,4 +1,4 @@
-from datetime import datetime
+from dateutil.parser import parse
 import pandas as pd
 
 import singer
@@ -40,8 +40,10 @@ def employee_rate_upload(intacct_client) -> None:
         )
 
     for index, row in data_frame.iterrows():
-        if row["employeeid"] in ids:
-            month, day, year = row["ratestartdate"].split("/")
+        if str(row["employeeid"]) in ids:
+            date = parse(row["ratestartdate"])
+            formatted_date = date.strftime('%m/%d/%Y')
+            month, day, year = formatted_date.split("/")
             employee_rate = {
                     "employeeid": row["employeeid"],
                     "ratestartdate": {
