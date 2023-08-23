@@ -23,6 +23,7 @@ def employee_rate_upload(intacct_client) -> None:
         object_type="employees", fields=["EMPLOYEEID"]
     )
     ids = [a_dict["EMPLOYEEID"] for a_dict in employee_ids]
+    
     # Get input from pipeline
     input_value = get_input()
 
@@ -37,10 +38,11 @@ def employee_rate_upload(intacct_client) -> None:
         raise Exception(
             f"Input is missing REQUIRED_COLS. Found={cols}, Required={REQUIRED_COLS}"
         )
+
     for index, row in data_frame.iterrows():
         if row["employeeid"] in ids:
             month, day, year = row["ratestartdate"].split("/")
-            entry = {
+            employee_rate = {
                     "employeeid": row["employeeid"],
                     "ratestartdate": {
                         "year": year,
@@ -48,13 +50,13 @@ def employee_rate_upload(intacct_client) -> None:
                         "day": day
                     },
                     "billingrate": row.get("billingrate", ""),
-                    "salaryrate": row.get("salaryrate", ""),
-                
+                    "salaryrate": row.get("salaryrate", ""), 
             }
-            intacct_client.post_employee_rate(entry)
+            intacct_client.post_employee_rate(employee_rate)
+           
         else:
             raise Exception(
-            "Missing Required employeeid Column. At least one employee id is required to upload a employee payrate"
+             f"Invalid Employee ID. Employee ID with the value {row['employeeid']} is missing in Intacct"
         )
-
+    
     logger.info("Upload completed")

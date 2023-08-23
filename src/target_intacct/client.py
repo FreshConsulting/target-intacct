@@ -233,7 +233,6 @@ class SageIntacctSDK:
 
         if use_key:
             object_type = data[key]["object"]
-           
             function_type = key 
             function_body = data[key]
         else:
