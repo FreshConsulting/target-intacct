@@ -41,9 +41,8 @@ def employee_rate_upload(intacct_client) -> None:
 
     for index, row in data_frame.iterrows():
         if str(row["employeeid"]) in ids:
-            date = parse(row["ratestartdate"])
-            formatted_date = date.strftime('%m/%d/%Y')
-            month, day, year = formatted_date.split("/")
+            start_date = parse(row["ratestartdate"])
+            year, month, day = start_date.year, start_date.month, start_date.day
             employee_rate = {
                     "employeeid": row["employeeid"],
                     "ratestartdate": {
