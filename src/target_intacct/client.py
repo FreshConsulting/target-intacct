@@ -24,6 +24,7 @@ from target_intacct.exceptions import (
 )
 
 from .const import INTACCT_OBJECTS
+logger = singer.get_logger()
 
 class SageIntacctSDK:
     """The base class for all API classes."""
@@ -172,6 +173,10 @@ class SageIntacctSDK:
 
         if response.status_code == 500:
             raise InternalServerError("Internal server error", parsed_response)
+
+        if str(parsed_response).find("BL34000061") != 1:
+            logger.info(f"Payrate Entry {dict_body['request']['operation']['content']} already exists in Intacct for that user and date. Skipping over that entry")
+            return {"result": ""}
 
         raise SageIntacctSDKError("Error: {0}".format(parsed_response))
 
