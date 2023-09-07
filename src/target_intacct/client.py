@@ -151,6 +151,10 @@ class SageIntacctSDK:
 
             if api_response["result"]["status"] == "success":
                 return api_response
+            
+            if str(parsed_response).find("BL34000061") != 1:
+                logger.info(f"Payrate Entry {dict_body['request']['operation']['content']} already exists in Intacct for that user and date. Skipping over that entry")
+                return {"result": ""}
 
         if response.status_code == 400:
             raise WrongParamsError("Some of the parameters are wrong", parsed_response)
@@ -173,10 +177,6 @@ class SageIntacctSDK:
 
         if response.status_code == 500:
             raise InternalServerError("Internal server error", parsed_response)
-
-        if str(parsed_response).find("BL34000061") != 1:
-            logger.info(f"Payrate Entry {dict_body['request']['operation']['content']} already exists in Intacct for that user and date. Skipping over that entry")
-            return {"result": ""}
 
         raise SageIntacctSDKError("Error: {0}".format(parsed_response))
 
