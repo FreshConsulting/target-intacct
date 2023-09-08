@@ -24,6 +24,7 @@ from target_intacct.exceptions import (
 )
 
 from .const import INTACCT_OBJECTS
+logger = singer.get_logger()
 
 class SageIntacctSDK:
     """The base class for all API classes."""
@@ -150,6 +151,10 @@ class SageIntacctSDK:
 
             if api_response["result"]["status"] == "success":
                 return api_response
+            
+            if str(parsed_response).find("BL34000061") != -1:
+                logger.info(f"Payrate Entry {dict_body['request']['operation']['content']} already exists in Intacct for that user and date. Skipping over that entry")
+                return {"result": ""}
 
         if response.status_code == 400:
             raise WrongParamsError("Some of the parameters are wrong", parsed_response)
