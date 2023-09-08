@@ -152,7 +152,7 @@ class SageIntacctSDK:
             if api_response["result"]["status"] == "success":
                 return api_response
             
-            if str(parsed_response).find("BL34000061") != 1:
+            if str(parsed_response).find("BL34000061") != -1:
                 logger.info(f"Payrate Entry {dict_body['request']['operation']['content']} already exists in Intacct for that user and date. Skipping over that entry")
                 return {"result": ""}
 
