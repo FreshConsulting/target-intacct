@@ -11,25 +11,39 @@ logger = singer.get_logger()
 def get_input():
     """Read the input from the pipeline and return a dictionary of the Records."""
     input = io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8")
-    input_value = {}
+    input_value = []
 
     # For each line of input, if it has data content (is a record) add the line to the dictionary
     for row in input:
         try:
-            raw_input = singer.parse_message(row).asdict()
+            raw_input = singer.parse_message(row).asdict()            
         except json.decoder.JSONDecodeError:
             logger.error("Unable to parse:\n{}".format(row))
             raise
-        message_type = raw_input["type"]
-        if message_type == "RECORD" and not any(
+        type = raw_input["type"]
+
+        # Streams of type Record contain the inputted data
+        if type == "RECORD" and not any(
             value == "" or value is None for value in raw_input["record"].values()
         ):
-            record = raw_input["record"]
-            if not input_value:
-                input_value = {key: [value] for key, value in record.items()}
+            # Group the data into dictonaries by stream name
+            stream_name = raw_input["stream"]
+            record = raw_input["record"] 
+            
+            # If a dictonary doesn't exist for the given stream name, create it
+            if not any(dict.get("stream") == stream_name for dict in input_value):
+                new_dict = {key: [value] for key, value in record.items()}
+                new_dict["stream"] = stream_name
+                input_value.append(new_dict)
+
+            # Else add the values of the record to the existing dictonary
             else:
-                for key, value in record.items():
-                    input_value[key].append(value)
+                for key, value in record.items(): 
+                    existing_dict = [dict for dict in input_value if dict["stream"] == stream_name][0]
+                    if key in existing_dict:                      
+                        existing_dict[key].append(value)
+                    else:
+                        existing_dict[key] = [value]     
     return input_value
 
 
