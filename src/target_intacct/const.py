@@ -24,6 +24,7 @@ INTACCT_OBJECTS = {
     "items": "ITEM",
     "vendors": "VENDOR",
     "statistical_accounts": "STATACCOUNT",
+    "checking_accounts": "CHECKINGACCOUNT"
 }
 
 PAYMENT_RECORDS_REQUIRED_COLS = { "payouts": {"payout_id", "amount", "available_on"}, "transactions":  {"id", "payout_id", "amount", "fee", "tax", "transaction_type"}}
