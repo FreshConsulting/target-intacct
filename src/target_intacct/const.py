@@ -26,4 +26,6 @@ INTACCT_OBJECTS = {
     "statistical_accounts": "STATACCOUNT",
 }
 
+PAYMENT_RECORDS_REQUIRED_COLS = { "payouts": {"payout_id", "amount", "available_on"}, "transactions":  {"id", "payout_id", "amount", "fee", "tax", "transaction_type"}}
+
 DEFAULT_API_URL = "https://api.intacct.com/ia/xml/xmlgw.phtml"
