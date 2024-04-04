@@ -79,7 +79,7 @@ def load_statistical_journal_entries(
     input_value = get_input()
 
     # Convert input from dictionary to DataFrame
-    data_frame = pd.DataFrame(input_value)
+    data_frame = pd.DataFrame(input_value[0])
 
     # Verify it has required columns
     cols = list(data_frame.columns)
