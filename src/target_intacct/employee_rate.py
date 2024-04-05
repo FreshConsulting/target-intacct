@@ -27,6 +27,9 @@ def employee_rate_upload(intacct_client) -> None:
     # Get input from pipeline
     input_value = get_input()
 
+    if not input_value or not isinstance(input_value, list):
+        raise Exception(f"Invalid input data recieved. Input data={input_value}")
+        
     # Convert input from dictionary to DataFrame
     data_frame = pd.DataFrame(input_value[0])
 

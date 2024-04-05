@@ -133,6 +133,9 @@ def payment_record_upload(intacct_client, config) -> None:
     # Get input from pipeline
     input_value = get_input()
     
+    if not input_value or not isinstance(input_value, list):
+        raise Exception(f"Invalid input data recieved. Input data={input_value}")
+    
     # Convert input from dictionary to DataFrames
     payouts, transactions = process_input(input_value) 
     grouped_transactions = transactions.groupby('payout_id')
