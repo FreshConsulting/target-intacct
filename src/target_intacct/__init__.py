@@ -47,7 +47,7 @@ def main() -> None:
     elif object_name == "employee_rate":
         employee_rate_upload(intacct_client)
     elif object_name == "payment_record":
-        payment_record_upload(intacct_client)
+        payment_record_upload(intacct_client, config)
     else:
         raise Exception("Valid Object Name Not Found")
 
