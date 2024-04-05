@@ -8,6 +8,10 @@ REQUIRED_CONFIG_KEYS = [
     "entity_id",
 ]
 
+PAYMENT_RECORDS_REQUIRED_CONFIG_KEYS = {
+   "locationid", "departmentid", "paymentmethod", "bankaccountid", "vendorid", "billno", "memo", "description", "manual_payment_memo", "checkno", "item1099", "source"
+}
+
 # List of available objects with their internal object-reference/endpoint name.
 INTACCT_OBJECTS = {
     "accounts_payable_bills": "APBILL",
