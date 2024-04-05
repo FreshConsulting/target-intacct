@@ -26,17 +26,17 @@ def get_input():
         if type == "RECORD" and not any(
             value == "" or value is None for value in raw_input["record"].values()
         ):
-            # Group the data into dictonaries by stream name
+            # Group the data into dictionaries by stream name
             stream_name = raw_input["stream"]
             record = raw_input["record"] 
             
-            # If a dictonary doesn't exist for the given stream name, create it
+            # If a dictionary doesn't exist for the given stream name, create it
             if not any(dict.get("stream") == stream_name for dict in input_value):
                 new_dict = {key: [value] for key, value in record.items()}
                 new_dict["stream"] = stream_name
                 input_value.append(new_dict)
 
-            # Else add the values of the record to the existing dictonary
+            # Else add the values of the record to the existing dictionary
             else:
                 for key, value in record.items(): 
                     existing_dict = [dict for dict in input_value if dict["stream"] == stream_name][0]
