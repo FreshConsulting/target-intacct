@@ -157,6 +157,7 @@ def payment_record_upload(intacct_client, config) -> None:
         
         # If payout was negative (more was refunded/in fees than profit made) send to manual payments, otherwise send data to other receipts
         if(payout_amount > 0):
+            # The key order in this dictionary in required for the Intacct API call to work correctly
             data = {
                     "paymentdate": get_date_lines(year, month, day),
                     "payee": config["source"],
@@ -168,6 +169,7 @@ def payment_record_upload(intacct_client, config) -> None:
                     "receiptitems": {"lineitem": build_line_items(gross_amount, total_fees, total_sales_tax, config)}}
             intacct_client.post_other_receipt(data)
         else:
+            # The key order in this dictionary in required for the Intacct API call to work correctly
             data = {
                     "bankaccountid": config["bankaccountid"],
                     "vendorid": config["vendorid"],
