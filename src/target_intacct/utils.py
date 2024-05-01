@@ -16,7 +16,7 @@ def get_input():
     # For each line of input, if it has data content (is a record) add the line to the dictionary
     for row in input:
         try:
-            raw_input = singer.parse_message(row).asdict()            
+            raw_input = singer.parse_message(row).asdict()         
         except json.decoder.JSONDecodeError:
             logger.error("Unable to parse:\n{}".format(row))
             raise
