@@ -40,10 +40,8 @@ def get_input():
             else:
                 for key, value in record.items(): 
                     existing_dict = [dict for dict in input_value if dict["stream"] == stream_name][0]
-                    if key in existing_dict:                      
-                        existing_dict[key].append(value)
-                    else:
-                        existing_dict[key] = [value]     
+                    existing_dict.setdefault(key, []).append(value)
+
     return input_value
 
 
