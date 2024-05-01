@@ -358,20 +358,34 @@ class SageIntacctSDK:
 
         response = self.format_and_send_request(data, True)
         return response
-
-    def post_employee_rate(self, journal):
-        """Post journal to Intacct"""
-        data = {"object": "create_employeerate", "create_employeerate": journal}
-
-        response = self.format_and_send_request(data, False)
-        return response
     
     def delete_journal(self, recordno):
+        """Delete journal from Intacct"""
         data = {"delete": {"object": "GLBATCH", "keys": recordno}}
 
         response = self.format_and_send_request(data, True)
         return response
+    
+    def post_employee_rate(self, employee_rate):
+        """Post employee rate to Intacct"""
+        data = {"object": "create_employeerate", "create_employeerate": employee_rate}
 
+        response = self.format_and_send_request(data, False)
+        return response
+    
+    def post_other_receipt(self, receipt_data):
+        """Post other receipt to Intacct"""
+        data = {"object": "record_otherreceipt", "record_otherreceipt": receipt_data}
+
+        response = self.format_and_send_request(data, False)
+        return response
+    
+    def post_manual_payment(self, payment_data):
+        """Post manual payment to Intacct"""
+        data = {"object": "create_appayment", "create_appayment": payment_data}
+
+        response = self.format_and_send_request(data, False)
+        return response
 
 def get_client(
     *,
