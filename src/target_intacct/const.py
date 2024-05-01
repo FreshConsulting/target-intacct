@@ -1,36 +1,61 @@
 REQUIRED_CONFIG_KEYS = [
     "company_id",
+    "entity_id",
+    "object_name",
     "sender_id",
     "sender_password",
     "user_id",
-    "user_password",
-    "object_name",
-    "entity_id",
+    "user_password", 
 ]
 
 PAYMENT_RECORDS_REQUIRED_CONFIG_KEYS = {
-   "locationid", "departmentid", "paymentmethod", "bankaccountid", "vendorid", "billno", "memo", "description", "manual_payment_memo", "checkno", "item1099", "source"
+   "bankaccountid", 
+   "billno", 
+   "checkno", 
+   "departmentid", 
+   "description", 
+   "item1099", 
+   "locationid", 
+   "manual_payment_memo", 
+   "memo", 
+   "paymentmethod", 
+   "source",
+   "vendorid",
 }
 
 # List of available objects with their internal object-reference/endpoint name.
 INTACCT_OBJECTS = {
     "accounts_payable_bills": "APBILL",
+    "checking_accounts": "CHECKINGACCOUNT",
+    "classes": "CLASS",
+    "customers": "CUSTOMER",
+    "departments": "DEPARTMENT",
+    "employees": "EMPLOYEE",
     "general_ledger_accounts": "GLACCOUNT",
     "general_ledger_details": "GLDETAIL",
     "general_ledger_journal_entries": "GLBATCH",
     "general_ledger_journal_entry_lines": "GLENTRY",
-    "employees": "EMPLOYEE",
-    "classes": "CLASS",
-    "locations": "LOCATION",
-    "departments": "DEPARTMENT",
-    "customers": "CUSTOMER",
-    "projects": "PROJECT",
     "items": "ITEM",
-    "vendors": "VENDOR",
+    "locations": "LOCATION",
+    "projects": "PROJECT",
     "statistical_accounts": "STATACCOUNT",
-    "checking_accounts": "CHECKINGACCOUNT"
+    "vendors": "VENDOR",
 }
 
-PAYMENT_RECORDS_REQUIRED_COLS = { "payouts": {"payout_id", "amount", "available_on"}, "transactions":  {"id", "payout_id", "amount", "fee", "tax", "transaction_type"}}
+PAYMENT_RECORDS_REQUIRED_COLS = { 
+    "payouts": {
+        "payout_id", 
+        "amount", 
+        "available_on",
+    }, 
+    "transactions":  {
+        "id", 
+        "payout_id", 
+        "amount", 
+        "fee", 
+        "tax", 
+        "transaction_type",
+    }
+}
 
 DEFAULT_API_URL = "https://api.intacct.com/ia/xml/xmlgw.phtml"
