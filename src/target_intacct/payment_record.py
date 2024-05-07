@@ -178,5 +178,5 @@ def payment_record_upload(intacct_client, config) -> None:
                     "checkdate": get_date_lines(year, month, day),
                     "checkno": config["checkno"],
                     "billno": config["billno"],
-                    "payitems": {"payitem": {"glaccountno": config["accountno_1"], "paymentamount": payout_amount/100, "item1099": config["item1099"], "departmentid": config["departmentid"], "locationid": config["locationid"]}}}           
+                    "payitems": {"payitem": {"glaccountno": config["accountno_1"], "paymentamount": abs(payout_amount)/100, "item1099": config["item1099"], "departmentid": config["departmentid"], "locationid": config["locationid"]}}}           
             intacct_client.post_manual_payment(data)
