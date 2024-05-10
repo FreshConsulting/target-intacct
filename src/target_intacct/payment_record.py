@@ -54,7 +54,7 @@ def get_receipt_data(transactions):
             else:
                 logger.warning(f"Unexpected transaction type found in transaction data. Found transaction type: {group_name}, expected: 'charge', 'fee', 'adjustment', or 'refund' ")
 
-        gross_amount = gross_amount - (total_adjustments + total_refunds)  
+        gross_amount = gross_amount + total_adjustments - total_refunds - total_sales_tax 
         return gross_amount, total_fees, total_sales_tax
 
 def process_input(input_value): 
