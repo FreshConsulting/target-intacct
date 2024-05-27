@@ -180,6 +180,6 @@ def payment_record_upload(intacct_client, config) -> None:
                     "paymentmethod": config["paymentmethod"],
                     "checkdate": get_date_lines(year, month, day),
                     "checkno": config["checkno"],
-                    "billno": config["billno"],
+                    "billno": f"{year}{month:02}{day:02}", # billno is is equal to the date of the payment
                     "payitems": {"payitem": {"glaccountno": config["accountno_1"], "paymentamount": abs(payout_amount)/100, "item1099": config["item1099"], "departmentid": config["departmentid"], "locationid": config["locationid"], "projectid": config["projectid"], "customerid": config["customerid"], "classid": config["classid"]}}}           
             intacct_client.post_manual_payment(data)
