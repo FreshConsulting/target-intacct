@@ -11,6 +11,8 @@ REQUIRED_CONFIG_KEYS = [
 PAYMENT_RECORDS_REQUIRED_CONFIG_KEYS = {
    "bankaccountid",
    "checkno", 
+   "classid",
+   "customerid",
    "departmentid", 
    "description", 
    "item1099", 
@@ -18,6 +20,7 @@ PAYMENT_RECORDS_REQUIRED_CONFIG_KEYS = {
    "manual_payment_memo", 
    "memo", 
    "paymentmethod", 
+   "projectid",
    "source",
    "vendorid",
 }
