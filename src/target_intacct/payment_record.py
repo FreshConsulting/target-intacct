@@ -12,7 +12,7 @@ logger = singer.get_logger()
 def build_line_items(gross_amount, total_fees, total_sales_tax, config):
     """Builds the line items for Intacct uploads"""
     accountno = config["accountno_1"]
-    details = {"memo": config["memo"], "locationid": config["locationid"], "departmentid": config["departmentid"]}
+    details = {"memo": config["memo"], "locationid": config["locationid"], "departmentid": config["departmentid"], "projectid": config["projectid"], "customerid": config["customerid"], "classid": config["classid"]}
     lines = [{"glaccountno": accountno, "amount": gross_amount/100, **details}]
     if total_fees > 0:
         accountno = config["accountno_2"]
@@ -101,8 +101,11 @@ def verify_config_values(intacct_client, config):
     vendor_ids = intacct_client.get_entity(object_type="vendors", fields=["VENDORID"])
     account_ids = intacct_client.get_entity(object_type="general_ledger_accounts", fields=["ACCOUNTNO"])
     bank_account_ids = intacct_client.get_entity(object_type="checking_accounts", fields=["BANKACCOUNTID"])
+    project_ids = intacct_client.get_entity(object_type="projects", fields=["PROJECTID"])
+    customer_ids = intacct_client.get_entity(object_type="customers", fields=["CUSTOMERID"])
+    class_ids = intacct_client.get_entity(object_type="classes", fields=["CLASSID"])
 
-    for name, ids_list in {"locationid": location_ids, "departmentid": department_ids, "vendorid": vendor_ids, "bankaccountid": bank_account_ids}.items():
+    for name, ids_list in {"locationid": location_ids, "departmentid": department_ids, "vendorid": vendor_ids, "bankaccountid": bank_account_ids, "projectid": project_ids, "customerid": customer_ids, "classid": class_ids}.items():
         config_value = config[name]       
         if not any(pair[name.upper()] == config_value for pair in ids_list):
                 raise Exception(
@@ -177,6 +180,6 @@ def payment_record_upload(intacct_client, config) -> None:
                     "paymentmethod": config["paymentmethod"],
                     "checkdate": get_date_lines(year, month, day),
                     "checkno": config["checkno"],
-                    "billno": config["billno"],
-                    "payitems": {"payitem": {"glaccountno": config["accountno_1"], "paymentamount": abs(payout_amount)/100, "item1099": config["item1099"], "departmentid": config["departmentid"], "locationid": config["locationid"]}}}           
+                    "billno": f"{year}{month:02}{day:02}", # billno is is equal to the date of the payment
+                    "payitems": {"payitem": {"glaccountno": config["accountno_1"], "paymentamount": abs(payout_amount)/100, "item1099": config["item1099"], "departmentid": config["departmentid"], "locationid": config["locationid"], "projectid": config["projectid"], "customerid": config["customerid"], "classid": config["classid"]}}}           
             intacct_client.post_manual_payment(data)

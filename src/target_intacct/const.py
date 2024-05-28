@@ -9,8 +9,7 @@ REQUIRED_CONFIG_KEYS = [
 ]
 
 PAYMENT_RECORDS_REQUIRED_CONFIG_KEYS = {
-   "bankaccountid", 
-   "billno", 
+   "bankaccountid",
    "checkno", 
    "departmentid", 
    "description", 
