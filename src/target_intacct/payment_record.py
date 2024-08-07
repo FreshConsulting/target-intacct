@@ -138,7 +138,7 @@ def payment_record_upload(intacct_client, config) -> None:
     
     if not input_value or not isinstance(input_value, list):
         logger.warning(f"Invalid input data recieved. Stopping pipeline. Input data={input_value}")
-        exit()
+        return
     
     # Convert input from dictionary to DataFrames
     payouts, transactions = process_input(input_value) 
