@@ -35,7 +35,7 @@ def get_receipt_data(transactions):
         
         # Handles data by group (so all charges at once, all fees at once, etc)
         for group_name, group_df in mapped_transactions:        
-            if group_name == "charge":
+            if group_name == "charge" or group_name == "payment":
                 gross_amount += group_df["amount"].sum()
                 total_fees += group_df["fee"].sum()               
                 total_sales_tax += group_df["tax"].sum() 
@@ -52,7 +52,7 @@ def get_receipt_data(transactions):
                 total_refunds += group_df["amount"].sum()
                 total_fees += group_df["fee"].sum()
             else:
-                logger.warning(f"Unexpected transaction type found in transaction data. Found transaction type: {group_name}, expected: 'charge', 'fee', 'adjustment', or 'refund' ")
+                logger.warning(f"Unexpected transaction type found in transaction data. Found transaction type: {group_name}, expected: 'charge', 'payment', 'fee', 'adjustment', or 'refund' ")
 
         gross_amount = gross_amount + total_adjustments - total_refunds - total_sales_tax 
         return gross_amount, total_fees, total_sales_tax
