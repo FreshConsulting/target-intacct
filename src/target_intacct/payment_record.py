@@ -1,5 +1,4 @@
 import pandas as pd
-import datetime
 import singer
 
 from .utils import get_input
@@ -13,77 +12,19 @@ def build_line_items(gross_amount, total_fees, total_sales_tax, config):
     """Builds the line items for Intacct uploads"""
     accountno = config["accountno_1"]
     details = {"memo": config["memo"], "locationid": config["locationid"], "departmentid": config["departmentid"], "projectid": config["projectid"], "customerid": config["customerid"], "classid": config["classid"]}
-    lines = [{"glaccountno": accountno, "amount": gross_amount/100, **details}]
-    if total_fees > 0:
+    lines = [{"glaccountno": accountno, "amount": gross_amount, **details}]
+    if total_fees != 0:
         accountno = config["accountno_2"]
-        lines.append({"glaccountno": accountno, "amount": -(total_fees/100), **details})
-    if total_sales_tax > 0:
+        lines.append({"glaccountno": accountno, "amount": total_fees, **details})
+    if total_sales_tax != 0:
         accountno = config["accountno_3"]
-        lines.append({"glaccountno": accountno, "amount": total_sales_tax/100, **details})
+        lines.append({"glaccountno": accountno, "amount": total_sales_tax, **details})
 
     return lines
 
 def get_date_lines(year, month, day):
     """Get a formatted date line"""
     return { "year": year, "month": month, "day": day }
-
-def get_receipt_data(transactions):
-        """Get the total amount, fees, and taxes for a payout's transactions"""
-        gross_amount, total_fees, total_adjustments, total_refunds, total_sales_tax = 0, 0, 0, 0, 0
-
-        mapped_transactions = transactions.groupby("transaction_type")
-        
-        # Handles data by group (so all charges at once, all fees at once, etc)
-        for group_name, group_df in mapped_transactions:        
-            if group_name == "charge" or group_name == "payment":
-                gross_amount += group_df["amount"].sum()
-                total_fees += group_df["fee"].sum()               
-                total_sales_tax += group_df["tax"].sum() 
-
-            elif group_name == "fee":
-                total_fees += group_df["amount"].sum() 
-                total_fees += group_df["fee"].sum()
-
-            elif group_name == "adjustment":
-                total_adjustments += group_df["amount"].sum()
-                total_fees += group_df["fee"].sum()
-
-            elif group_name == "refund":
-                total_refunds += group_df["amount"].sum()
-                total_fees += group_df["fee"].sum()
-            else:
-                raise Exception(f"Unexpected transaction type found in transaction data. Found transaction type: {group_name}, expected: 'charge', 'payment', 'fee', 'adjustment', or 'refund' ")
-
-        gross_amount = gross_amount + total_adjustments - total_refunds - total_sales_tax 
-        return gross_amount, total_fees, total_sales_tax
-
-def process_input(input_value): 
-    """
-    Process the recieved input
-        Expected output: 
-        Payouts: a dataframe containing all of the new payouts
-            Format [{ "id": string, "amount": int, "available_on": timestamp }, ...]
-        Transactions: a dataframe containing all of the new transactions
-            Format [{"id": string, "amount": int, "fee": int, "transaction_type": string, "payout_id": string, "tax": int}, ...]
-    """   
-    input_data = {data["stream"]: data for data in input_value if data["stream"] in ["payouts", "transactions"]}
-   
-    # Verify required colums are met
-    for data_type in input_data.values():            
-        cols = data_type.keys()
-        REQUIRED_COLS = PAYMENT_RECORDS_REQUIRED_COLS[data_type["stream"]]
-
-        if not REQUIRED_COLS.issubset(cols):
-            raise Exception(
-                f"Input is missing REQUIRED_COLS. Found={cols}, Required={REQUIRED_COLS}"
-            )
-    
-    payouts = input_data.get('payouts')
-    transactions = input_data.get('transactions')
-    transactions_df = pd.DataFrame(transactions)
-    payouts_df = pd.DataFrame(payouts)
-
-    return payouts_df, transactions_df   
 
 def verify_config_values(intacct_client, config):
     """
@@ -137,29 +78,39 @@ def payment_record_upload(intacct_client, config) -> None:
     input_value = get_input()
     
     if not input_value or not isinstance(input_value, list):
-        raise Exception(f"Invalid input data recieved. Input data={input_value}")
+        logger.info(f"No input data or invalid input data recieved. Input data={input_value}")
+        return 
     
-    # Convert input from dictionary to DataFrames
-    payouts, transactions = process_input(input_value) 
-    grouped_transactions = transactions.groupby('payout_id')
+    # Convert input from dictionary to DataFrame
+    data_frame = pd.DataFrame(input_value[0])
 
-    for payout_id, associated_transactions in grouped_transactions:         
+    # Verify it has required columns
+    cols = set(data_frame.columns)
     
-        # Get all of the reciept totals 
-        gross_amount, total_fees, total_sales_tax = get_receipt_data(associated_transactions) 
-
-        # Get the payout data for the group of transactions
-        payout = payouts.loc[payouts['payout_id'] == payout_id].squeeze()
-        payout_amount = payout["amount"]
-
-        timestamp = payout["available_on"]
-        payout_date = datetime.datetime.fromtimestamp(timestamp)
-        year = payout_date.year
-        month = payout_date.month
-        day = payout_date.day
+    if not PAYMENT_RECORDS_REQUIRED_COLS.issubset(cols):
+        raise Exception(
+            f"Input is missing REQUIRED_COLS. Found={cols}, Required={PAYMENT_RECORDS_REQUIRED_COLS}"
+        )
+    
+    # Process each payout summary
+    for _, payout in data_frame.iterrows():
+        payout_amount = float(payout["payout_amount"]) if payout["payout_amount"] is not None else 0
+        gross_amount = float(payout["gross_amount"]) if payout["gross_amount"] is not None else 0
+        total_fees = float(payout["total_fees"]) if payout["total_fees"] is not None else 0
+        total_sales_tax = float(payout["total_sales_tax"]) if payout["total_sales_tax"] is not None else 0
+        
+        # Get date components from pre-calculated values and convert to int
+        year = int(float(payout["year"])) if payout["year"] is not None else 0
+        month = int(float(payout["month"])) if payout["month"] is not None else 0
+        day = int(float(payout["day"])) if payout["day"] is not None else 0
+        
+        # Validate date values
+        if year == 0 or month == 0 or day == 0:
+            logger.warning(f"Skipping record with invalid date components: year={year}, month={month}, day={day}")
+            continue
         
         # If payout was negative (more was refunded/in fees than profit made) send to manual payments, otherwise send data to other receipts
-        if(payout_amount > 0):
+        if payout_amount > 0:
             # The key order in this dictionary in required for the Intacct API call to work correctly
             data = {
                     "paymentdate": get_date_lines(year, month, day),
@@ -181,5 +132,5 @@ def payment_record_upload(intacct_client, config) -> None:
                     "checkdate": get_date_lines(year, month, day),
                     "checkno": config["checkno"],
                     "billno": f"{year}{month:02}{day:02}", # billno is is equal to the date of the payment
-                    "payitems": {"payitem": {"glaccountno": config["accountno_1"], "paymentamount": abs(payout_amount)/100, "item1099": config["item1099"], "departmentid": config["departmentid"], "locationid": config["locationid"], "projectid": config["projectid"], "customerid": config["customerid"], "classid": config["classid"]}}}           
+                    "payitems": {"payitem": {"glaccountno": config["accountno_1"], "paymentamount": abs(payout_amount), "item1099": config["item1099"], "departmentid": config["departmentid"], "locationid": config["locationid"], "projectid": config["projectid"], "customerid": config["customerid"], "classid": config["classid"]}}}           
             intacct_client.post_manual_payment(data)

@@ -44,20 +44,15 @@ INTACCT_OBJECTS = {
     "vendors": "VENDOR",
 }
 
-PAYMENT_RECORDS_REQUIRED_COLS = { 
-    "payouts": {
-        "payout_id", 
-        "amount", 
-        "available_on",
-    }, 
-    "transactions":  {
-        "id", 
-        "payout_id", 
-        "amount", 
-        "fee", 
-        "tax", 
-        "transaction_type",
-    }
+PAYMENT_RECORDS_REQUIRED_COLS = {
+    "day", 
+    "gross_amount", 
+    "month", 
+    "payout_amount", 
+    "payout_id", 
+    "total_fees", 
+    "total_sales_tax", 
+    "year"
 }
 
 DEFAULT_API_URL = "https://api.intacct.com/ia/xml/xmlgw.phtml"
