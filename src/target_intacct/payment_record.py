@@ -122,7 +122,7 @@ def payment_record_upload(intacct_client, config) -> None:
                     "description": config["description"],
                     "receiptitems": {"lineitem": build_line_items(gross_amount, total_fees, total_sales_tax, config)}}
             intacct_client.post_other_receipt(data)
-        else:
+        elif payout_amount < 0:
             # The key order in this dictionary in required for the Intacct API call to work correctly
             data = {
                     "bankaccountid": config["bankaccountid"],
@@ -134,3 +134,5 @@ def payment_record_upload(intacct_client, config) -> None:
                     "billno": f"{year}{month:02}{day:02}", # billno is is equal to the date of the payment
                     "payitems": {"payitem": {"glaccountno": config["accountno_1"], "paymentamount": abs(payout_amount), "item1099": config["item1099"], "departmentid": config["departmentid"], "locationid": config["locationid"], "projectid": config["projectid"], "customerid": config["customerid"], "classid": config["classid"]}}}           
             intacct_client.post_manual_payment(data)
+        else:
+            logger.info(f"Skipping record with an amount of $0")
