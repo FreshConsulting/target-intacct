@@ -1,25 +1,24 @@
 REQUIRED_CONFIG_KEYS = [
     "company_id",
-    "entity_id",
     "object_name",
     "sender_id",
     "sender_password",
     "user_id",
-    "user_password", 
+    "user_password",
 ]
 
 PAYMENT_RECORDS_REQUIRED_CONFIG_KEYS = {
    "bankaccountid",
-   "checkno", 
+   "checkno",
    "classid",
    "customerid",
-   "departmentid", 
-   "description", 
-   "item1099", 
-   "locationid", 
-   "manual_payment_memo", 
-   "memo", 
-   "paymentmethod", 
+   "departmentid",
+   "description",
+   "item1099",
+   "locationid",
+   "manual_payment_memo",
+   "memo",
+   "paymentmethod",
    "projectid",
    "source",
    "vendorid",
@@ -45,13 +44,13 @@ INTACCT_OBJECTS = {
 }
 
 PAYMENT_RECORDS_REQUIRED_COLS = {
-    "day", 
-    "gross_amount", 
-    "month", 
-    "payout_amount", 
-    "payout_id", 
-    "total_fees", 
-    "total_sales_tax", 
+    "day",
+    "gross_amount",
+    "month",
+    "payout_amount",
+    "payout_id",
+    "total_fees",
+    "total_sales_tax",
     "year"
 }
 
